@@ -1,0 +1,35 @@
+# Starter pipeline
+- task: Docker@2
+  inputs:
+    containerRegistry: 'DockerHub-1'
+    command: 'push'
+# Start with a minimal pipeline that you can customize to build and deploy your code.
+# Add steps that build, run tests, deploy, and more:
+# https://aka.ms/yaml
+
+trigger:
+- master
+
+pool:
+  vmImage: 'ubuntu-latest'
+
+steps:
+- script: echo Hello, world!
+  displayName: 'Run a one-line script'
+
+- script: |
+    echo Add other tasks to build, test, and deploy your project.
+    echo See https://aka.ms/yaml
+  displayName: 'Run a multi-line script'
+
+ - task: AmazonWebServices.aws-vsts-tools.ECRPushImage.ECRPushImage@1
+   displayName: 'Push Image to Non-Prod Registry'
+    inputs:
+      awsCredentials: ${{parameters.awsNonProdConnection}}
+      regionName: 'us-east-1'
+      sourceImageName: '${{parameters.dockerImageName}}'
+      repositoryName: '${{parameters.dockerImageName}}'
+      sourceImageTag: '$(Build.BuildNumber)'
+      pushTag: '$(Build.BuildNumber)'
+      autoCreateRepository: true
+  condition: and(eq(variables['Agent.JobStatus'],'Succeeded'),ne(variables['build.reason'],'PullRequest'))
